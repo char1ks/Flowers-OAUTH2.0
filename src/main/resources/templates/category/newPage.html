@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая Категория</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<h1>Создать Новую Категорию</h1>
+<form id="categoryForm">
+    <label for="name">Название:</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="description">Описание:</label>
+    <textarea id="description" name="description" rows="4"></textarea>
+
+    <button type="submit">Сохранить</button>
+</form>
+
+<div id="message" class="message" style="display: none;"></div>
+
+<script>
+    document.getElementById('categoryForm').addEventListener('submit', function (event) {
+        event.preventDefault(); // Предотвращаем отправку формы по умолчанию
+
+        // Собираем данные из формы
+        const formData = {
+            name: document.getElementById('name').value,
+            description: document.getElementById('description').value
+        };
+
+        // Отправляем данные через fetch API
+        fetch('/category/api/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw new Error('Ошибка при сохранении категории');
+            }
+        })
+        .then(data => {
+            // Отображаем сообщение об успешном сохранении
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = 'Категория успешно сохранена!';
+            messageDiv.style.display = 'block';
+
+            // Очищаем форму
+            document.getElementById('categoryForm').reset();
+        })
+        .catch(error => {
+            // Отображаем сообщение об ошибке
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = 'Ошибка: ' + error.message;
+            messageDiv.style.display = 'block';
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавить Новый Цветок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+        }
+        label {
+            margin-top: 10px;
+        }
+        button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Добавить Новый Цветок</h1>
+<form id="flower-form">
+    <label for="name">Название:</label>
+    <input type="text" id="name" required>
+    <label for="price">Цена:</label>
+    <input type="number" id="price" required>
+    <label for="availability">Доступность:</label>
+    <input type="checkbox" id="availability">
+    <label for="description">Описание:</label>
+    <textarea id="description"></textarea>
+    <label for="type">Тип:</label>
+    <select id="type">
+        <option value="RED">Красный</option>
+        <option value="GREEN">Зеленый</option>
+        <option value="BLUE">Синий</option>
+        <option value="YELLOW">Желтый</option>
+        <option value="ORANGE">Оранжевый</option>
+        <option value="PURPLE">Фиолетовый</option>
+        <option value="PINK">Розовый</option>
+        <option value="BLACK">Черный</option>
+        <option value="WHITE">Белый</option>
+        <option value="GRAY">Серый</option>
+        <option value="BROWN">Коричневый</option>
+        <option value="CYAN">Циан</option>
+        <option value="MAGENTA">Маджента</option>
+        <option value="LIGHT_BLUE">Светло-синий</option>
+        <option value="DARK_GREEN">Темно-зеленый</option>
+    </select>
+    <label for="categoryId">Выберите Категорию:</label>
+    <select id="categoryId" required>
+        <option value="">-- Выберите категорию --</option>
+        <!-- Категории будут добавлены здесь через JavaScript -->
+    </select>
+    <button type="submit">Сохранить Цветок</button>
+</form>
+<script>
+    // Функция для загрузки категорий
+    async function loadCategories() {
+        const response = await fetch('/category/api/all'); // Получаем все категории
+        const categories = await response.json();
+        const categorySelect = document.getElementById('categoryId');
+
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id; // Предполагается, что у категории есть поле id
+            option.textContent = category.name; // Предполагается, что у категории есть поле name
+            categorySelect.appendChild(option);
+        });
+    }
+
+    // Загружаем категории при загрузке страницы
+    loadCategories();
+
+    document.getElementById('flower-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const flower = {
+            name: document.getElementById('name').value,
+            price: parseFloat(document.getElementById('price').value),
+            availability: document.getElementById('availability').checked,
+            description: document.getElementById('description').value,
+            type: document.getElementById('type').value
+        };
+        const categoryId = parseInt(document.getElementById('categoryId').value); // Получаем выбранный categoryId
+
+        // Сначала сохраняем цветок
+        const response = await fetch('/flower/api/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(flower),
+        });
+        if (response.ok) {
+            const flowerId = await response.json(); // Предполагается, что API возвращает ID сохраненного цветка
+            // Отправляем запрос на связывание цветка с категорией
+            await fetch(`/category/api/flower_category/${flowerId}/${categoryId}`, {
+                method: 'PUT'
+            });
+            alert('Цветок добавлен и связан с категорией!');
+        } else {
+            alert('Ошибка при добавлении цветка.');
+        }
+        window.location.href = 'main';
+    });
+</script>
+</body>
+</html>

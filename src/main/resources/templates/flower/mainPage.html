@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цветы</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        #flower-list {
+            margin-bottom: 20px;
+        }
+        .flower-item {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #notifications {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+        }
+        .notification {
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .notification.fade-out {
+            animation: fadeOut 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+    </style>
+</head>
+<body>
+<h1>Список Цветов</h1>
+<div id="flower-list">
+    <div th:each="flower : ${flowers}" class="flower-item">
+        <h2 th:text="${flower.name}"></h2>
+        <p>Цена: <span th:text="${flower.price}"></span></p>
+        <p>Доступность: <span th:text="${flower.availability ? 'В наличии' : 'Нет в наличии'}"></span></p>
+        <button onclick="viewFlower(${flower.id})">Просмотреть</button>
+    </div>
+</div>
+<button onclick="window.location.href='new'">Добавить Новый Цветок</button>
+
+<!-- Pagination Controls -->
+<div>
+    <span>Страница <span th:text="${currentPage + 1}"></span> из <span th:text="${totalPages}"></span></span>
+    <button onclick="window.location.href='main?page=0'">Первая</button>
+    <button th:if="${currentPage > 0}" onclick="window.location.href='main?page=' + (${currentPage} - 1)">Предыдущая</button>
+    <button th:if="${currentPage < totalPages - 1}" onclick="window.location.href='main?page=' + (${currentPage} + 1)">Следующая</button>
+    <button onclick="window.location.href='main?page=' + (${totalPages} - 1)">Последняя</button>
+</div>
+
+<!-- Контейнер для уведомлений -->
+<div id="notifications"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+<script>
+    // Функция для просмотра конкретного цветка
+    function viewFlower(id) {
+        window.location.href = `concrete/${id}`; // Измените на новый маршрут
+    }
+
+    // Подключение к SockJS
+    const socket = new SockJS('http://localhost:8080/ws'); // Укажите правильный URL для SockJS
+    const stompClient = Stomp.over(socket);
+
+    // Подключение к серверу
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
+
+        // Подписка на уведомления
+        stompClient.subscribe('/topic/fruits', function (message) {
+            showNotification(message.body);
+        });
+    });
+
+    // Функция для отображения уведомлений
+    function showNotification(message) {
+        const notificationDiv = document.getElementById('notifications');
+        const notificationItem = document.createElement('div');
+        notificationItem.className = 'notification';
+        notificationItem.textContent = `Уведомление: ${message}`;
+        notificationDiv.appendChild(notificationItem);
+
+        // Удаление уведомления через 5 секунд
+        setTimeout(() => {
+            notificationItem.classList.add('fade-out');
+            setTimeout(() => {
+                notificationItem.remove();
+            }, 500); // Время анимации fadeOut
+        }, 5000); // 5 секунд
+    }
+</script>
+</body>
+</html>

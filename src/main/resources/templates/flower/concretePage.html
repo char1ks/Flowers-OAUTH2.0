@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Цветок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #4CAF50;
+        }
+        #flower-details {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<h1>Информация о Цветке</h1>
+<div id="flower-details"></div>
+<button onclick="window.history.back()">Назад</button>
+<button id="buy-button" style="display:none;">Купить</button>
+
+<script>
+    async function fetchFlower() {
+        // Извлечение id из URL
+        const pathParts = window.location.pathname.split('/');
+        const id = pathParts[pathParts.length - 1]; // Получаем последний элемент
+        const response = await fetch(`/flower/api/concrete/${id}`);
+
+        if (!response.ok) {
+            alert('Ошибка при загрузке данных о цветке.');
+            return;
+        }
+
+        const flower = await response.json();
+        console.log(flower); // Для отладки, чтобы увидеть, что возвращает сервер
+
+        const flowerDetails = document.getElementById('flower-details');
+        flowerDetails.innerHTML = `
+            <h2>${flower.name}</h2>
+            <p>Цена: ${flower.price}</p>
+            <p>Доступность: ${flower.availability ? 'В наличии' : 'Нет в наличии'}</p>
+            <p>Описание: ${flower.description}</p>
+            <p>Тип: ${flower.type}</p>
+        `;
+
+        // Показываем кнопку "Купить", если цветок доступен
+        if (flower.availability) {
+            document.getElementById('buy-button').style.display = 'inline';
+        } else {
+            console.log('Цветок недоступен.'); // Для отладки
+        }
+    }
+
+        document.getElementById('buy-button').addEventListener('click', async () => {
+            const pathParts = window.location.pathname.split('/');
+            const id = pathParts[pathParts.length - 1]; // Получаем последний элемент
+
+            const response = await fetch(`/flower/api/add_to_favorite/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                alert('Цветок добавлен в избранное!');
+            } else {
+                alert('Ошибка при добавлении цветка в избранное.');
+            }
+        });
+
+        fetchFlower();
+</script>
+</body>
+</html>
